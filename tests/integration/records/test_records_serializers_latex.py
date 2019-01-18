@@ -692,9 +692,83 @@ def test_jinja_template_prints_citation_count(isolated_api_client):
     assert dedent(expected) == result
 
 
-def test_latex_serializer_serialize_search_results_eu(api_client):
-    response = api_client.get(
-        '/literature/?q=title collider',
+def test_latex_serializer_serialize_search_results_eu(isolated_api_client):
+    record_json = {
+        '$schema': 'http://localhost:5000/schemas/records/hep.json',
+        'control_number': '64209',
+        'texkeys': [
+            'a123bx'
+        ],
+        'titles': [
+            {
+                'title': 'The Amazing Spiderman',
+            },
+        ],
+        'authors': [
+            {
+                'full_name': 'Lee, Stan',
+            },
+        ],
+        'collaborations': [{
+            'value': 'LHCb',
+        }],
+        'dois': [
+            {
+                'value': '10.1088/1361-6633/aa5514',
+            },
+        ],
+        'arxiv_eprints': [
+            {
+                'value': '1607.06746',
+                'categories': ['hep-th']
+            },
+        ],
+        'publication_info': [{
+            'journal_volume': '58',
+            'journal_issue': '120',
+            'artid': '17920',
+            'year': '2014'
+        }],
+        'report_numbers': [{
+            'value': 'DESY-17-036'
+        }]
+    }
+    TestRecordMetadata.create_from_kwargs(
+        json=record_json, index_name='records-hep')
+
+    record_json = {
+        '$schema': 'http://localhost:5000/schemas/records/hep.json',
+        'control_number': '64209',
+        'texkeys': [
+            'us2000'
+        ],
+        'titles': [
+            {
+                'title': 'Ultimate Spiderman',
+            },
+        ],
+        'authors': [
+            {
+                'full_name': 'Bendis, Brian Michael',
+            },
+        ],
+        'arxiv_eprints': [
+            {
+                'value': '1019.58932',
+                'categories': ['hep-ex']
+            },
+        ],
+        'publication_info': [{
+            'journal_title': 'SM Collection'
+            'journal_volume': '1',
+            'journal_issue': '1',
+            'year': '2000'
+        }],
+    }
+    TestRecordMetadata.create_from_kwargs(
+        json=record_json, index_name='records-hep')
+    response = isolated_api_client.get(
+        '/literature/?q=title spiderman',
         headers={'Accept': 'application/vnd+inspire.latex.eu+x-latex'},
     )
 
@@ -702,17 +776,19 @@ def test_latex_serializer_serialize_search_results_eu(api_client):
 
     result = response.data
     expected = """\
-    %\\cite{1373790}
-    \\bibitem{1373790}
-    T.~Sch\xc3\xb6rner-Sadenius,
-    %``The Large Hadron Collider,''
-    doi:10.1007/978-3-319-15001-7
+    %\\cite{a123bx}
+    \\bibitem{a123bx}
+    S.~Lee [LHCb],
+    %``The Amazing Spiderman,''
+    doi:10.1088/1361-6633/aa5514
+    [arXiv:1607.06746 [hep-th]].
 
-    %\\cite{701585}
-    \\bibitem{701585}
-    A.~De Roeck and H.~Jung,
-    %``HERA and the LHC: A Workshop on the implications of HERA for LHC physics: Proceedings Part A,''
-    [arXiv:hep-ph/0601012 [hep-ph]]."""
+    %\\cite{us2000}
+    \\bibitem{us2000}
+    B.~M.~Bendis,
+    %``Ultimate Spiderman,''
+    SM\\ Collection \\textbf{1} (2000)
+    [arXiv:1019.58932 [hep-ex]]."""
 
     assert dedent(expected) == result
 
